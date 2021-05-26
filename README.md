@@ -21,6 +21,6 @@
 - **[2021년 5월 24일](https://github.com/pstage-ocr-team6/peer-session/discussions/2)**
   - 그라운드룰 설정하고 몇 가지 협업 툴 소개.
   - 모더레이터 역할 및 순서 정함.
-- **[2021년 5월 25일](https://github.com/pstage-ocr-team6/peer-session/discussions/2)**
+- **[2021년 5월 25일](https://github.com/pstage-ocr-team6/peer-session/discussions/4)**
 
 ---
