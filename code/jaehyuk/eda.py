@@ -7,6 +7,8 @@ import pandas as pd
 import csv  
 from collections import Counter
 from pprint import pprint
+
+from scipy.signal.signaltools import lfilter
 #%%
 img_dir='/opt/ml/input/data/train_dataset/images'
 # img_dir='images/brightness'
@@ -125,10 +127,12 @@ plt.title('img_Contrast')
 plt.imshow(img) 
 #%%
 # img_dir='/opt/ml/input/data/train_dataset/images'
-image = cv2.imread(os.path.join(img_dir,'train_63334.jpg'))  # 이미지 로드
+image = cv2.imread(os.path.join(img_dir,'train_83399.jpg'))  # 이미지 로드
 h,w=image.shape[:2] # h, w
 gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)  # gray 채널
-thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]  #OTSU 방법을 이용해 binary 이미지 변환
+# thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]  #OTSU 방법을 이용해 binary 이미지 변환
+thresh=cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                    cv2.THRESH_BINARY, 15,2)
 plt.title('original') 
 plt.imshow(image)
 plt.figure()
@@ -409,9 +413,36 @@ plt.figure()
 plt.imshow(255-result,cmap='gray')
 plt.figure()
 plt.imshow(255-dilate_image,cmap='gray')
+#%%
+def remove_line(gray):
+    h,w=img.shape[:2] # h, w
+    # gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)  # gray 채널
+    thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]  #OTSU 방법을 이용해 binary 이미지 변환
+
+    kernel = np.ones((3, 3), np.uint8)
+    dilation_image = cv2.dilate(thresh, kernel, iterations=1) # dilate 연산 
+
+    # 가록 선을 찾을 커널 정하기 -> 가로 선을 찾을 꺼나 (x,y)에서 x를 더 크게 잡아야된다.
+    horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25,1)) 
+    # 모포로지 연산 (위의 dilate와 유사한 시리즈)
+    detected_lines = cv2.morphologyEx(dilation_image, cv2.MORPH_OPEN, horizontal_kernel, iterations=2)
+
+    # 선들의 contour 들을 찾기
+    cnts = cv2.findContours(detected_lines, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+
+    temp_height=10
+    for c in cnts: # 모든 contour 마다
+        temp=c.flatten()
+        if max(temp[::2])-min(temp[::2]) >w/2: # contour의 w가 전체 이미지의 w/2보다 크면 삭제
+            temp_height=max(temp[1::2])-min(temp[1::2])
+            cv2.drawContours(dilation_image, [c], -1, (0,0,0), -1) # 안을 검은색으로 채워줌
+    repair_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1,temp_height//10))
+    result = cv2.morphologyEx(dilation_image, cv2.MORPH_CLOSE, repair_kernel, iterations=2)
+    return 255-result
 # %%
-def remove_brightness(img):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+def remove_brightness(gray):
+    # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     h,w=img.shape[:2]
     if h*w>1000*100:
         gray=cv2.resize(gray, dsize=(0, 0), fx=0.3, fy=0.3, interpolation=cv2.INTER_LINEAR)
@@ -429,14 +460,169 @@ def remove_brightness(img):
     repair_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1,5))
     result = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, repair_kernel, iterations=1)
     # erode_image = cv2.erode(opening, kernel, iterations=1)
-    kernel = np.ones((2, 2), np.uint8)
-    dilate_image = cv2.dilate(result, kernel, iterations=2)
+    kernel = np.ones((1, 5), np.uint8)
+    dilate_image = cv2.dilate(result, kernel, iterations=1)
     return 255-result
 # %%
-image_list=['train_03760.jpg','train_14180.jpg','train_23372.jpg','train_25827.jpg','train_31345.jpg','train_47703.jpg',
-'train_69864.jpg','train_71023.jpg','train_83399.jpg','train_90301.jpg']
-for image in image_list:
-    img=cv2.imread(os.path.join(img_dir,image))
-    plt.imshow(remove_brightness(img),cmap='gray')
+image_list=['03760','14180','23372','25827','31345','47703',
+'69864','71023','83399','90301','25827', '23372', '03760', '45307', '66036', '57674', '40377',
+'83399', '14180', '71023', '90301', '69864',
+'23372', '23166', '73781', '17609']
+for image in set(image_list):
+    img=cv2.imread(os.path.join(img_dir,'train_'+image+'.jpg'))
+    plt.title(image)
+    rm_bright=remove_brightness(img)
+    plt.imshow(rm_bright,cmap='gray')
+    plt.figure()
+    plt.title(image)
+    plt.imshow(255-remove_line(rm_bright),cmap='gray')
+    plt.figure()
+# %%
+img=cv2.imread(os.path.join(img_dir,'train_'+str(14180)+'.jpg'))
+plt.imshow(img)
+# %%
+image_list=['83399']
+for image in set(image_list):
+    img=cv2.imread(os.path.join(img_dir,'train_'+image+'.jpg'))
+    plt.title(image)
+    rm_bright=remove_brightness(img)
+    plt.imshow(rm_bright,cmap='gray')
+    plt.figure()
+    plt.imshow(255-remove_line(rm_bright),cmap='gray')
+    plt.figure()
+# %%
+# from scipy.interpolate import splrep, splev
+img=cv2.imread(os.path.join(img_dir,'train_'+'00525'+'.jpg'))
+gray=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+h,w=gray.shape[:2]
+temp=[]
+white_img=255+np.zeros_like(gray)
+# gray-=255
+for i in range(w):
+    temp.append(gray[:,i].mean())
+plt.title('x')
+plt.plot(temp)
+plt.figure()
+temp=[]
+for i in range(h):
+    temp.append(gray[i,:].mean())
+# print(h,w)
+# print(len(temp))
+# grad=np.gradient(temp)
+plt.title('y')
+plt.plot(temp)
+plt.figure()
+plt.imshow(img)
+# f = splrep(gray[0,:],grad,k=5,s=3)
+# %%
+# %%
+img=cv2.imread(os.path.join(img_dir,'train_'+'65867'+'.jpg'))
+plt.imshow(img) 
+# gray=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+# h,w=gray.shape[:2]
+
+# sliding_size=np.zeros((h//3,w//3))
+# %%
+import imutils
+def pyramid(image, scale=1.5, minSize=(30, 30)):
+	# yield the original image
+	yield image
+	# keep looping over the pyramid
+	while True:
+		# compute the new dimensions of the image and resize it
+		w = int(image.shape[1] / scale)
+		image = imutils.resize(image, width=w)
+		# if the resized image does not meet the supplied minimum
+		# size, then stop constructing the pyramid
+		if image.shape[0] < minSize[1] or image.shape[1] < minSize[0]:
+			break
+		# yield the next image in the pyramid
+		yield image
+def sliding_window(image, stepSize, windowSize):
+	# slide a window across the image
+	for y in range(0, image.shape[0], stepSize):
+		for x in range(0, image.shape[1], stepSize):
+			# yield the current window
+			yield (x, y, image[y:y + windowSize[1], x:x + windowSize[0]])
+# %%
+# image=cv2.imread(os.path.join(img_dir,'train_'+'00525'+'.jpg'))
+save_folder='/opt/ml/c_transformed'
+image_list=['03760','14180','23372','25827','31345','47703',
+'69864','71023','83399','90301','25827', '23372', '03760', '45307', '66036', '57674', '40377',
+'83399', '14180', '71023', '90301', '69864',
+'23372', '23166', '73781', '17609',
+'67774', '05513', '12169', 
+'65511', '67496', '67496', '08518',
+'52073', 
+71594,
+58664, 79361, 33776,
+73463, 80954,
+71152,
+88703,
+89744, 38256, 66300, 88703, 38538, 76487, 87216, 41498, 78022, 62535, 29298,42042,77860, 81037,
+64703,
+21807,89744,90858,99892,88991,
+42562, 22767, 44015, '02801', 98707, 63021, 68263, 87109, '06959', 85476,
+65867 
+]
+for image in set(image_list):
+    img=cv2.imread(os.path.join(img_dir,'train_'+str(image)+'.jpg'))
+    gray=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    h,w=gray.shape[:2]
+    (winW, winH) = (w//3, h//3)
+    _max=0
+    _min=np.inf
+    orig_mean=gray.mean()
+    for resized in pyramid(gray, scale=1.5):
+        # loop over the sliding window for each layer of the pyramid
+        # print(resized)
+        for (x, y, window) in sliding_window(resized, stepSize=max(w//10,h//10), windowSize=(winW, winH)):
+        # if the window does not meet our desired window size, ignore it
+            if window.shape[0] != winH or window.shape[1] != winW:
+                continue
+            _mean=resized[y:y+winH,x:x+winW].mean()
+            if _max <_mean:
+                _max=_mean
+            if _min > _mean:
+                _min=_mean
+            # print(_mean)
+            # clone = resized.copy()
+            # cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 255, 0), 2)
+            # plt.title(resized[y:y+winH,x:x+winW].mean())
+            # plt.imshow(clone)
+            # plt.figure()
+    
+    if orig_mean < 127:
+        show=remove_brightness(gray)
+    else:
+        if (_max-orig_mean) > 40 or (_min-orig_mean)<-40 :
+            show=remove_brightness(gray)
+        else:
+            show=remove_line(gray)
+    # plt.title(((_max-orig_mean),(_min-orig_mean),int(orig_mean)))
+    # print(os.path.join(save_folder,str(image)+'.jpg'))
+    # break
+    cv2.imwrite(os.path.join(save_folder,str(image)+'.jpg'),img)
+    cv2.imwrite(os.path.join(save_folder,str(image)+'_bi.jpg'),show)
+    # plt.title(str(image))
+    # plt.imshow(show,cmap='gray')
+    # plt.figure()
+# %%
+cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
+# %%
+low_resol_image=[
+    '89744', '38256', '66300', '88703', '38538', '76487', 87216, 41498, 78022, 62535, 29298,42042,77860, 81037
+]
+path = "/opt/edsr_x4.pb"
+sr = cv2.dnn_superres.DnnSuperResImpl_create()
+sr.readModel(path)
+for image in low_resol_image:
+    img=cv2.imread(os.path.join(img_dir,'train_'+str(image)+'.jpg'))
+    result = sr.upsample(img)
+
+    # plt.title(img.shape[:2])
+    plt.imshow(img)
+    plt.figure()
+    plt.imshow(result)
     plt.figure()
 # %%
