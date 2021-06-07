@@ -45,7 +45,7 @@
   - SATRN 베이스코드에 구현되지 못한 부분을 점차 추가하는 방향.
   - SRN, CSTR 모델도 구현해보기로 함.
 - **[2021년 6월 02일](https://github.com/pstage-ocr-team6/peer-session/discussions/28)**
-  - 운영진 티타임 관련해서 취업 관련 이야기 공유
+  - 운영진 티타임 관련해서 취업 관련 이야기 공유.
   - CSTR, SRN 논문은 최신이나 제대로된 코드가 없어서 난항을 겪고 있음.
   - BTTR 논문에 사용된 beam search, bidirectional decoder 부분 추가하면 좋을 것 같음.
   - beam search는 일반화된 코드를 사용하자 토의.
