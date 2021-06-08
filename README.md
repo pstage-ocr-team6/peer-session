@@ -57,4 +57,9 @@
   - 적용할 수 있는 아이디어 정리.
   - Git 사용법 관련 간단히 공유.
 
+### Week 3 (2021.06.07 - 2021.06.13)
+
+- **[2021년 6월 07일](https://github.com/pstage-ocr-team6/peer-session/discussions/33)**
+  - 멘토님 깜짝 방문 → 디코더+LM, CSTR 구현
+
 ---
