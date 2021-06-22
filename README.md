@@ -61,5 +61,15 @@
 
 - **[2021년 6월 07일](https://github.com/pstage-ocr-team6/peer-session/discussions/33)**
   - 멘토님 깜짝 방문 → 디코더+LM, CSTR 구현
-
+- **[2021년 6월 08일](https://github.com/pstage-ocr-team6/peer-session/discussions/35)**
+  - 네트워킹 데이 준비 Checklist 생성.
+  - 각자 하고 있는 것들을 하면서 궁금한 점을 물어봄.
+  - CSTR 학습 시작 성공!
+- **[2021년 6월 09일](https://github.com/pstage-ocr-team6/peer-session/discussions/38)**
+  - 실험 결과를 바탕으로 가장 잘 나온 모델 학습 계획 세움.
+- **[2021년 6월 10일](https://github.com/pstage-ocr-team6/peer-session/discussions/41)**
+  - 최종 모델에 쓸 기술들을 정리.
+  - 최종 제출과 네트워킹 데이를 고려하여 마일스톤 수정.
+- **[2021년 6얼 11일](https://github.com/pstage-ocr-team6/peer-session/discussions/42)** 
+  - 최종 모델 config로 5-fold로 교차검증하기로 결정.
 ---
