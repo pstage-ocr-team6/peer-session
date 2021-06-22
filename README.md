@@ -70,6 +70,6 @@
 - **[2021년 6월 10일](https://github.com/pstage-ocr-team6/peer-session/discussions/41)**
   - 최종 모델에 쓸 기술들을 정리.
   - 최종 제출과 네트워킹 데이를 고려하여 마일스톤 수정.
-- **[2021년 6얼 11일](https://github.com/pstage-ocr-team6/peer-session/discussions/42)** 
+- **[2021년 6 11일](https://github.com/pstage-ocr-team6/peer-session/discussions/42)** 
   - 최종 모델 config로 5-fold로 교차검증하기로 결정.
 ---
